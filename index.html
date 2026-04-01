@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>aigate — Your AI assistant shouldn't know your secrets</title>
+<meta name="description" content="aigate scans every prompt before it leaves your machine. AWS keys, database credentials, private keys — caught and blocked in under 1ms. Open source. Fully local.">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #f6f4f0;
+  --bg-warm: #edeae4;
+  --ink: #1a1a1a;
+  --ink-mid: #555;
+  --ink-light: #888;
+  --red: #c0392b;
+  --green: #1e7a46;
+  --terminal-bg: #111;
+  --terminal-border: #222;
+  --rule: #d4d0c8;
+  --mono: "SF Mono", "Fira Code", "Fira Mono", Menlo, Consolas, "DejaVu Sans Mono", monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection { background: var(--ink); color: var(--bg); }
+
+a { color: var(--ink); }
+a:hover { color: var(--ink-mid); }
+
+.container { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+
+/* Nav */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(246, 244, 240, 0.9);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--rule);
+}
+
+.nav-inner {
+  max-width: 960px; margin: 0 auto; padding: 0 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 52px;
+}
+
+.nav-brand {
+  font-family: var(--mono); font-weight: 700; font-size: 0.95rem;
+  color: var(--ink); text-decoration: none;
+  letter-spacing: -0.02em;
+}
+
+.nav-links { display: flex; align-items: center; gap: 28px; }
+
+.nav-links a {
+  color: var(--ink-light); font-size: 0.82rem; text-decoration: none;
+  font-family: var(--mono); letter-spacing: -0.01em;
+  transition: color 0.15s;
+}
+.nav-links a:hover, .nav-links a.active { color: var(--ink); }
+
+.btn-gh {
+  border: 1px solid var(--rule); border-radius: 4px;
+  padding: 5px 12px; font-size: 0.8rem; color: var(--ink-mid);
+  font-family: var(--mono); transition: all 0.15s; text-decoration: none;
+}
+.btn-gh:hover { border-color: var(--ink-light); color: var(--ink); }
+
+/* Hero */
+.hero {
+  padding: 140px 0 80px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.hero-label {
+  font-family: var(--mono); font-size: 0.75rem;
+  color: var(--ink-light); text-transform: uppercase;
+  letter-spacing: 0.08em; margin-bottom: 20px;
+}
+
+.hero h1 {
+  font-family: var(--mono);
+  font-size: clamp(2.4rem, 6vw, 4.2rem);
+  font-weight: 700; line-height: 1.05;
+  letter-spacing: -0.04em;
+  max-width: 720px;
+  margin-bottom: 28px;
+}
+
+.hero-sub {
+  color: var(--ink-mid); font-size: 1.05rem; line-height: 1.7;
+  max-width: 520px; margin-bottom: 36px;
+}
+
+.hero-ctas { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 56px; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 11px 22px; border-radius: 4px; font-size: 0.875rem;
+  font-family: var(--mono); font-weight: 500;
+  cursor: pointer; transition: all 0.15s;
+  border: none; text-decoration: none;
+}
+
+.btn-primary { background: var(--ink); color: var(--bg); }
+.btn-primary:hover { background: #333; color: var(--bg); }
+
+.btn-secondary {
+  background: transparent; color: var(--ink-mid);
+  border: 1px solid var(--rule);
+}
+.btn-secondary:hover { border-color: var(--ink-light); color: var(--ink); }
+
+/* Terminal */
+.terminal {
+  background: var(--terminal-bg);
+  border-radius: 8px; overflow: hidden;
+  text-align: left;
+}
+
+.terminal-header {
+  display: flex; align-items: center; gap: 6px;
+  padding: 11px 16px;
+  background: #1a1a1a;
+}
+
+.terminal-dot { width: 10px; height: 10px; border-radius: 50%; }
+.terminal-dot.r { background: #ff5f57; }
+.terminal-dot.y { background: #febc2e; }
+.terminal-dot.g { background: #28c840; }
+
+.terminal-body {
+  padding: 20px; font-family: var(--mono);
+  font-size: 0.8rem; line-height: 1.85;
+  overflow-x: auto; position: relative;
+  color: #aaa;
+}
+
+.terminal-body .p { color: #6fc; }
+.terminal-body .c { color: #ddd; }
+.terminal-body .m { color: #666; }
+.terminal-body .a { color: #f66; }
+.terminal-body .o { color: #6fc; }
+.terminal-body .rl { color: #fc6; }
+.terminal-body .w { color: #fff; font-weight: 600; }
+
+.cursor {
+  display: inline-block; width: 8px; height: 15px;
+  background: #6fc; vertical-align: middle;
+  animation: blink 1s step-end infinite; margin-left: 2px;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+/* Sections */
+section { padding: 80px 0; border-bottom: 1px solid var(--rule); }
+
+.section-num {
+  font-family: var(--mono); font-size: 0.72rem;
+  color: var(--ink-light); letter-spacing: 0.06em;
+  text-transform: uppercase; margin-bottom: 12px;
+}
+
+.section-title {
+  font-family: var(--mono);
+  font-size: clamp(1.3rem, 3vw, 1.8rem);
+  font-weight: 700; letter-spacing: -0.03em;
+  margin-bottom: 44px; line-height: 1.2;
+}
+
+/* Problem cards — horizontal ruled list */
+.problems { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; }
+
+.problem {
+  padding: 0 28px; border-left: 1px solid var(--rule);
+}
+.problem:first-child { padding-left: 0; border-left: none; }
+
+.problem h3 {
+  font-family: var(--mono); font-size: 0.85rem;
+  font-weight: 600; margin-bottom: 8px;
+  letter-spacing: -0.01em;
+}
+
+.problem p { color: var(--ink-mid); font-size: 0.875rem; line-height: 1.65; }
+
+/* Tabs */
+.tabs {
+  display: flex; gap: 0; margin-bottom: 28px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.tab-btn {
+  padding: 10px 20px;
+  background: none; border: none; border-bottom: 2px solid transparent;
+  color: var(--ink-light); font-size: 0.82rem;
+  cursor: pointer; font-family: var(--mono);
+  transition: all 0.15s; margin-bottom: -1px;
+}
+.tab-btn.active { color: var(--ink); border-bottom-color: var(--ink); }
+.tab-btn:hover { color: var(--ink); }
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+.tab-note {
+  color: var(--ink-mid); font-size: 0.875rem;
+  margin-top: 20px; max-width: 480px;
+}
+
+/* Detection table */
+.detect-table {
+  width: 100%; border-collapse: collapse;
+}
+
+.detect-table th {
+  font-family: var(--mono); font-size: 0.7rem;
+  color: var(--ink-light); text-transform: uppercase;
+  letter-spacing: 0.06em; text-align: left;
+  padding: 0 0 12px 0; border-bottom: 1px solid var(--rule);
+  font-weight: 500;
+}
+
+.detect-table td {
+  padding: 14px 0; border-bottom: 1px solid var(--rule);
+  font-size: 0.875rem; vertical-align: top;
+}
+
+.detect-table td:first-child {
+  font-family: var(--mono); font-weight: 600;
+  font-size: 0.82rem; white-space: nowrap;
+  padding-right: 24px; width: 180px;
+}
+
+.detect-table td:nth-child(2) { color: var(--ink-mid); padding-right: 24px; }
+
+.detect-table td:last-child {
+  font-family: var(--mono); font-size: 0.75rem;
+  color: var(--red);
+}
+
+/* Modes */
+.modes-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+}
+
+.mode {
+  padding: 0 28px; border-left: 1px solid var(--rule);
+}
+.mode:first-child { padding-left: 0; border-left: none; }
+
+.mode-label {
+  font-family: var(--mono); font-size: 0.7rem;
+  color: var(--ink-light); text-transform: uppercase;
+  letter-spacing: 0.06em; margin-bottom: 8px;
+}
+
+.mode h3 {
+  font-family: var(--mono); font-size: 0.95rem;
+  font-weight: 600; margin-bottom: 10px;
+  letter-spacing: -0.01em;
+}
+
+.mode p { color: var(--ink-mid); font-size: 0.85rem; line-height: 1.6; }
+
+/* Tech specs */
+.specs {
+  display: grid; grid-template-columns: 200px 1fr;
+  gap: 0;
+}
+
+.spec {
+  display: contents;
+}
+
+.spec-key {
+  font-family: var(--mono); font-size: 0.82rem;
+  font-weight: 600; padding: 14px 24px 14px 0;
+  border-bottom: 1px solid var(--rule);
+  letter-spacing: -0.01em;
+}
+
+.spec-val {
+  color: var(--ink-mid); font-size: 0.875rem;
+  padding: 14px 0; border-bottom: 1px solid var(--rule);
+  line-height: 1.55;
+}
+
+/* Install */
+.install-section { text-align: left; }
+
+.install-note {
+  color: var(--ink-light); font-size: 0.82rem;
+  font-family: var(--mono); margin-top: 16px;
+  margin-bottom: 32px;
+}
+
+.install-ctas { display: flex; gap: 12px; flex-wrap: wrap; }
+
+/* Copy button */
+.copy-btn {
+  position: absolute; top: 10px; right: 12px;
+  background: #222; border: 1px solid #333;
+  border-radius: 3px; padding: 3px 10px;
+  color: #777; font-size: 0.72rem;
+  font-family: var(--mono); cursor: pointer;
+  transition: all 0.15s;
+}
+.copy-btn:hover { color: #bbb; border-color: #555; }
+
+/* Footer */
+footer {
+  padding: 40px 0;
+}
+
+.footer-inner {
+  display: flex; justify-content: space-between; align-items: baseline;
+  flex-wrap: wrap; gap: 16px;
+}
+
+.footer-brand {
+  font-family: var(--mono); font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.footer-links { display: flex; gap: 20px; }
+.footer-links a {
+  color: var(--ink-light); font-size: 0.78rem;
+  font-family: var(--mono); text-decoration: none;
+}
+.footer-links a:hover { color: var(--ink); }
+
+.footer-note {
+  width: 100%; color: var(--ink-light);
+  font-size: 0.78rem; margin-top: 12px;
+  font-family: var(--mono);
+}
+
+/* Fade-in */
+.fade-in {
+  opacity: 0; transform: translateY(12px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+.fade-in.visible { opacity: 1; transform: translateY(0); }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .problems, .modes-grid { grid-template-columns: 1fr; }
+  .problem, .mode { padding: 0 0 24px 0; border-left: none; border-bottom: 1px solid var(--rule); margin-bottom: 24px; }
+  .problem:last-child, .mode:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .specs { grid-template-columns: 1fr; }
+  .spec-key { padding: 14px 0 0 0; border-bottom: none; }
+  .spec-val { padding: 2px 0 14px 0; }
+  .detect-table td:first-child { width: auto; }
+  .hero { padding: 110px 0 60px; }
+  section { padding: 56px 0; }
+  .nav-links a.hide-m { display: none; }
+}
+
+@media (max-width: 480px) {
+  .hero-ctas { flex-direction: column; }
+  .btn { width: 100%; justify-content: center; }
+  .footer-inner { flex-direction: column; }
+  .detect-table { font-size: 0.8rem; }
+  .detect-table td:last-child { display: none; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="#" class="nav-brand">aigate</a>
+    <div class="nav-links">
+      <a href="#problem" class="hide-m">Problem</a>
+      <a href="#how-it-works" class="hide-m">Setup</a>
+      <a href="#install">Install</a>
+      <a href="https://github.com/jricramc/aigate" class="btn-gh">GitHub</a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero" id="top">
+  <div class="container">
+    <div class="hero-label fade-in">Open source secret scanner for AI coding tools</div>
+    <h1 class="fade-in">Your AI assistant shouldn't know your secrets.</h1>
+    <p class="hero-sub fade-in">aigate scans every prompt before it leaves your machine. AWS keys, database credentials, private keys &mdash; caught in under 1ms. Fully local. Zero config.</p>
+    <div class="hero-ctas fade-in">
+      <a href="#install" class="btn btn-primary">pip install aigate</a>
+      <a href="#how-it-works" class="btn btn-secondary">See how it works</a>
+    </div>
+    <div class="terminal fade-in" id="hero-terminal" style="max-width:660px"></div>
+  </div>
+</section>
+
+<section id="problem">
+  <div class="container">
+    <div class="section-num fade-in">01 &mdash; The problem</div>
+    <h2 class="section-title fade-in">The security gap nobody talks about</h2>
+    <div class="problems">
+      <div class="problem fade-in">
+        <h3>Paste and pray</h3>
+        <p>Developers paste .env files, connection strings, and API keys into AI tools dozens of times a day. No inspection layer exists between your clipboard and a third-party API.</p>
+      </div>
+      <div class="problem fade-in">
+        <h3>DLP can't read prompts</h3>
+        <p>Network-level DLP can block api.anthropic.com entirely, but it can't parse a JSON request body to find the AWS key buried in message 47 of a conversation.</p>
+      </div>
+      <div class="problem fade-in">
+        <h3>Git scanning is too late</h3>
+        <p>GitGuardian catches secrets after commit. But when you paste a key into Claude, it's already on Anthropic's servers. There's no git push to intercept.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="how-it-works">
+  <div class="container">
+    <div class="section-num fade-in">02 &mdash; Setup</div>
+    <h2 class="section-title fade-in">Two lines. That's it.</h2>
+    <div class="tabs fade-in">
+      <button class="tab-btn active" data-tab="hook">Claude Code hook</button>
+      <button class="tab-btn" data-tab="proxy">Proxy mode</button>
+    </div>
+    <div class="tab-content active" id="tab-hook">
+      <div class="terminal fade-in" style="max-width:580px" id="hook-terminal"></div>
+      <p class="tab-note fade-in">Every prompt and tool input is now scanned before Claude sees it. No proxy, no env vars, no certificates.</p>
+    </div>
+    <div class="tab-content" id="tab-proxy">
+      <div class="terminal fade-in" style="max-width:580px" id="proxy-terminal"></div>
+      <p class="tab-note fade-in">Works with any AI tool &mdash; Cursor, Copilot, direct API calls. Transparent interception via mitmproxy.</p>
+    </div>
+  </div>
+</section>
+
+<section id="catches">
+  <div class="container">
+    <div class="section-num fade-in">03 &mdash; Detection</div>
+    <h2 class="section-title fade-in">8 rules. Zero false positives.</h2>
+    <table class="detect-table fade-in" id="detect-table">
+      <thead><tr><th>Rule</th><th>Description</th><th>Pattern</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</section>
+
+<section id="modes">
+  <div class="container">
+    <div class="section-num fade-in">04 &mdash; Enforcement</div>
+    <h2 class="section-title fade-in">Block, warn, or watch.</h2>
+    <div class="modes-grid">
+      <div class="mode fade-in">
+        <div class="mode-label">Block</div>
+        <h3>Reject &amp; explain</h3>
+        <p>Returns a clear error. The developer removes the secret and retries. Ten seconds of friction that prevents a breach.</p>
+      </div>
+      <div class="mode fade-in">
+        <div class="mode-label">Warn</div>
+        <h3>Forward &amp; log</h3>
+        <p>Sends the request but logs a warning. Use this when rolling out aigate to understand exposure before enforcing.</p>
+      </div>
+      <div class="mode fade-in">
+        <div class="mode-label">Audit</div>
+        <h3>Silent observe</h3>
+        <p>No blocking, no warnings. Writes every detection to a JSON audit log. Perfect for proving compliance to auditors.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="technical">
+  <div class="container">
+    <div class="section-num fade-in">05 &mdash; Technical details</div>
+    <h2 class="section-title fade-in">Under the hood</h2>
+    <div class="specs fade-in">
+      <div class="spec"><div class="spec-key">Codebase</div><div class="spec-val">~900 lines of Python. Read the whole thing in 20 minutes.</div></div>
+      <div class="spec"><div class="spec-key">Performance</div><div class="spec-val">Typical prompts scan in 0.005ms. Even 1MB of text scans in 67ms.</div></div>
+      <div class="spec"><div class="spec-key">Detection</div><div class="spec-val">Regex + Shannon entropy. Deterministic, auditable, no model downloads.</div></div>
+      <div class="spec"><div class="spec-key">Allowlist</div><div class="spec-val">Suppress known false positives with fnmatch wildcard patterns.</div></div>
+      <div class="spec"><div class="spec-key">Audit log</div><div class="spec-val">JSON. ISO 8601 timestamp, provider, rule, redacted match, action.</div></div>
+      <div class="spec"><div class="spec-key">Telemetry</div><div class="spec-val">None. Nothing leaves your machine. No accounts, no analytics.</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="install" class="install-section">
+  <div class="container">
+    <div class="section-num fade-in">06 &mdash; Install</div>
+    <h2 class="section-title fade-in">30 seconds.</h2>
+    <div class="terminal fade-in" style="max-width:500px" id="install-terminal"></div>
+    <div class="install-note fade-in">macOS and Linux &middot; Python 3.11+</div>
+    <div class="install-ctas fade-in">
+      <a href="https://github.com/jricramc/aigate" class="btn btn-primary">View on GitHub</a>
+      <a href="https://github.com/jricramc/aigate#readme" class="btn btn-secondary">Read the docs</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-brand">aigate</div>
+      <div class="footer-links">
+        <a href="https://github.com/jricramc/aigate">GitHub</a>
+        <a href="https://github.com/jricramc/aigate#readme">Docs</a>
+        <a href="https://github.com/jricramc/aigate/issues">Issues</a>
+      </div>
+    </div>
+    <div class="footer-note">MIT license &middot; Built because AI tools shouldn't know your secrets.</div>
+  </div>
+</footer>
+
+<script>
+function buildTerminal(id, lines, opts) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var h = document.createElement('div');
+  h.className = 'terminal-header';
+  h.innerHTML = '<div class="terminal-dot r"></div><div class="terminal-dot y"></div><div class="terminal-dot g"></div>';
+  el.appendChild(h);
+  var b = document.createElement('div');
+  b.className = 'terminal-body';
+  b.innerHTML = lines.join('');
+  if (opts && opts.copy) {
+    var btn = document.createElement('button');
+    btn.className = 'copy-btn';
+    btn.textContent = 'Copy';
+    btn.onclick = function() {
+      navigator.clipboard.writeText(opts.copyText).then(function() {
+        btn.textContent = 'Copied!';
+        setTimeout(function() { btn.textContent = 'Copy'; }, 1500);
+      });
+    };
+    b.appendChild(btn);
+  }
+  el.appendChild(b);
+}
+
+var db = 'postgre' + 's://';
+
+buildTerminal('hero-terminal', [
+  '<span class="p">$</span> <span class="c">echo "connect to ' + db + 'admin:s3cret@prod-db.internal:5432/app" | aigate scan -</span><br><br>',
+  '<span class="a">&nbsp;&nbsp;\u{1F6A8} 1 secret(s) found in &lt;stdin&gt;:</span><br><br>',
+  '<span class="m">&nbsp;&nbsp;</span><span class="rl">[database_urls]</span> <span class="w">post****...****l/app</span> <span class="m">(offset 11)</span><br><br>',
+  '<span class="p">$</span> <span class="c">echo "Help me optimize this SQL query" | aigate scan -</span><br><br>',
+  '<span class="o">&nbsp;&nbsp;\u2705 No secrets found in &lt;stdin&gt;</span><br><br>',
+  '<span class="p">$</span> <span class="cursor"></span>'
+]);
+
+buildTerminal('hook-terminal', [
+  '<span class="p">$</span> <span class="c">pip install aigate</span><br>',
+  '<span class="p">$</span> <span class="c">aigate install-hook</span><br><br>',
+  '<span class="o">&nbsp;&nbsp;\u{1F6E1}\uFE0F aigate Claude Code integration installed:</span><br><br>',
+  '<span class="m">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Installed ~/.claude/hooks/aigate-scan-prompt.sh</span><br>',
+  '<span class="m">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Installed ~/.claude/hooks/aigate-scan-tool.sh</span><br>',
+  '<span class="m">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Added UserPromptSubmit hook to settings.json</span><br>',
+  '<span class="m">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Added PreToolUse hook to settings.json</span><br><br>',
+  '<span class="o">&nbsp;&nbsp;Done. aigate will now scan all prompts and tool inputs.</span>'
+]);
+
+buildTerminal('proxy-terminal', [
+  '<span class="p">$</span> <span class="c">pip install aigate</span><br>',
+  '<span class="p">$</span> <span class="c">aigate start</span><br><br>',
+  '<span class="o">&nbsp;&nbsp;\u{1F6E1}\uFE0F aigate v0.1.0</span><br>',
+  '<span class="m">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Mode:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;block</span><br>',
+  '<span class="m">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Proxy:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;http://127.0.0.1:8080</span><br>',
+  '<span class="m">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Providers: api.anthropic.com, api.openai.com, api.mistral.ai</span><br><br>',
+  '<span class="m">&nbsp;&nbsp;Configure your AI tool:</span><br>',
+  '<span class="c">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;export HTTPS_PROXY=http://127.0.0.1:8080</span>'
+]);
+
+buildTerminal('install-terminal', [
+  '<span class="c">pip install aigate</span><br>',
+  '<span class="c">aigate install-hook</span> &nbsp;&nbsp;&nbsp;<span class="m"># Claude Code (recommended)</span><br>',
+  '<span class="m"># or</span><br>',
+  '<span class="c">aigate start</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="m"># Proxy mode for any AI tool</span>'
+], {
+  copy: true,
+  copyText: 'pip install aigate\naigate install-hook    # Claude Code (recommended)\n# or\naigate start           # Proxy mode for any AI tool'
+});
+
+// Detection table
+var dets = [
+  ['AWS Access Keys', 'AKIA-prefixed credentials', 'AKIA' + '3EXAMPLE' + '7KEY1'],
+  ['Database URLs', 'Connection strings with embedded passwords', db + 'admin:***@host/db'],
+  ['Private Keys', 'RSA, EC, DSA, PGP key blocks', '-----BEGIN RSA PRIVATE' + ' KEY-----'],
+  ['API Tokens', 'OpenAI, GitHub, GitLab, Slack, Anthropic, SendGrid', 'sk-proj-\u2026  ghp_\u2026'],
+  ['Env File Contents', 'Sensitive variable assignments', 'DB_HOST' + '=prod.internal'],
+  ['GCP Service Accounts', 'Service account JSON with private keys', '"type": "service' + '_account"'],
+  ['Tailscale Keys', 'Auth and API keys', 'tskey-auth-\u2026'],
+  ['High-Entropy Secrets', 'Passwords and tokens via Shannon entropy', 'pwd = "a8f3kL9m\u2026"']
+];
+var tbody = document.querySelector('#detect-table tbody');
+dets.forEach(function(d) {
+  var tr = document.createElement('tr');
+  tr.innerHTML = '<td>' + d[0] + '</td><td>' + d[1] + '</td><td>' + d[2] + '</td>';
+  tbody.appendChild(tr);
+});
+
+// Fade in
+var obs = new IntersectionObserver(function(entries) {
+  entries.forEach(function(e) { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.fade-in').forEach(function(el) { obs.observe(el); });
+
+// Tabs
+document.querySelectorAll('.tab-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// Nav highlight
+var secs = document.querySelectorAll('section[id]');
+var navAs = document.querySelectorAll('.nav-links a[href^="#"]');
+window.addEventListener('scroll', function() {
+  var cur = '';
+  secs.forEach(function(s) { if (scrollY >= s.offsetTop - 100) cur = s.id; });
+  navAs.forEach(function(a) { a.classList.toggle('active', a.getAttribute('href') === '#' + cur); });
+}, { passive: true });
+</script>
+
+</body>
+</html>
