@@ -84,12 +84,6 @@ nav {
   border-bottom: 1px solid var(--rule);
 }
 
-.hero-label {
-  font-family: var(--mono); font-size: 0.75rem;
-  color: var(--ink-light); text-transform: uppercase;
-  letter-spacing: 0.08em; margin-bottom: 20px;
-}
-
 .hero h1 {
   font-family: var(--mono);
   font-size: clamp(2.4rem, 6vw, 4.2rem);
@@ -108,7 +102,7 @@ nav {
 
 /* Split-pane hero demo */
 .split-demo {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 2px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
   background: #222; border-radius: 8px; overflow: hidden;
 }
 .split-demo .terminal { border-radius: 0; }
@@ -201,34 +195,12 @@ nav {
 /* Sections */
 section { padding: 80px 0; border-bottom: 1px solid var(--rule); }
 
-.section-num {
-  font-family: var(--mono); font-size: 0.72rem;
-  color: var(--ink-light); letter-spacing: 0.06em;
-  text-transform: uppercase; margin-bottom: 12px;
-}
-
 .section-title {
   font-family: var(--mono);
   font-size: clamp(1.3rem, 3vw, 1.8rem);
   font-weight: 700; letter-spacing: -0.03em;
   margin-bottom: 44px; line-height: 1.2;
 }
-
-/* Problem cards — horizontal ruled list */
-.problems { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; }
-
-.problem {
-  padding: 0 28px; border-left: 1px solid var(--rule);
-}
-.problem:first-child { padding-left: 0; border-left: none; }
-
-.problem h3 {
-  font-family: var(--mono); font-size: 0.85rem;
-  font-weight: 600; margin-bottom: 8px;
-  letter-spacing: -0.01em;
-}
-
-.problem p { color: var(--ink-mid); font-size: 0.875rem; line-height: 1.65; }
 
 /* Tabs */
 .tabs {
@@ -321,12 +293,6 @@ section { padding: 80px 0; border-bottom: 1px solid var(--rule); }
   letter-spacing: 0.06em; margin-bottom: 8px;
 }
 
-.mode h3 {
-  font-family: var(--mono); font-size: 0.95rem;
-  font-weight: 600; margin-bottom: 10px;
-  letter-spacing: -0.01em;
-}
-
 .mode p { color: var(--ink-mid); font-size: 0.85rem; line-height: 1.6; }
 
 /* Tech specs */
@@ -417,12 +383,11 @@ footer {
 }
 
 @media (max-width: 768px) {
-  .problems, .modes-grid, .modes-grid.modes-4 { grid-template-columns: 1fr; }
-  .redact-layout { grid-template-columns: 1fr !important; gap: 24px !important; }
+  .modes-grid, .modes-grid.modes-4 { grid-template-columns: 1fr; }
   .split-demo { grid-template-columns: 1fr; }
   .split-demo .terminal-body { min-height: auto; }
-  .problem, .mode { padding: 0 0 24px 0; border-left: none; border-bottom: 1px solid var(--rule); margin-bottom: 24px; }
-  .problem:last-child, .mode:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .mode { padding: 0 0 24px 0; border-left: none; border-bottom: 1px solid var(--rule); margin-bottom: 24px; }
+  .mode:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
   .specs { grid-template-columns: 1fr; }
   .spec-key { padding: 14px 0 0 0; border-bottom: none; }
   .spec-val { padding: 2px 0 14px 0; }
@@ -447,8 +412,8 @@ footer {
   <div class="nav-inner">
     <a href="#" class="nav-brand">aigate</a>
     <div class="nav-links">
-      <a href="#problem" class="hide-m">Problem</a>
       <a href="#how-it-works" class="hide-m">Setup</a>
+      <a href="#layers" class="hide-m">Layers</a>
       <a href="#install">Install</a>
       <a href="https://github.com/jricramc/aigate" class="btn-gh">GitHub</a>
     </div>
@@ -457,108 +422,99 @@ footer {
 
 <section class="hero" id="top">
   <div class="container">
-    <div class="hero-label fade-in">Open source secret scanner for AI coding tools</div>
-    <h1 class="fade-in">Your AI assistant shouldn't know your secrets.</h1>
-    <p class="hero-sub fade-in">aigate scans every prompt before it leaves your machine. Secrets get blocked or automatically redacted with env var placeholders. The AI never sees your credentials. Fully local. Zero config.</p>
+    <h1 class="fade-in">Stop leaking secrets to AI.</h1>
+    <p class="hero-sub fade-in">Catches secrets in prompts, tool inputs, generated code, and existing files. Redacts or blocks before the API sees them. Fully local.</p>
     <div class="hero-ctas fade-in">
-      <a href="#install" class="btn btn-primary">pip install aigate</a>
+      <button class="btn btn-primary" onclick="var i=this.querySelector('.copy-icon');navigator.clipboard.writeText('pip install aigate && aigate setup-all').then(function(){i.innerHTML='<polyline points=&quot;20 6 9 17 4 12&quot;/>';i.style.color='#6fc';setTimeout(function(){i.innerHTML='<rect x=&quot;9&quot; y=&quot;9&quot; width=&quot;13&quot; height=&quot;13&quot; rx=&quot;2&quot;/><path d=&quot;M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1&quot;/>';i.style.color=''},1500)})">pip install aigate &amp;&amp; aigate setup-all <svg class="copy-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;opacity:0.6"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>
       <a href="#how-it-works" class="btn btn-secondary">See how it works</a>
     </div>
   </div>
-  <div class="container-wide">
-    <div class="split-demo fade-in" id="hero-demo"></div>
-  </div>
-</section>
-
-<section id="problem">
   <div class="container">
-    <div class="section-num fade-in">01 &mdash; The problem</div>
-    <h2 class="section-title fade-in">The security gap nobody talks about</h2>
-    <div class="problems">
-      <div class="problem fade-in">
-        <h3>Paste and pray</h3>
-        <p>Developers paste .env files, connection strings, and API keys into AI tools dozens of times a day. No inspection layer exists between your clipboard and a third-party API.</p>
-      </div>
-      <div class="problem fade-in">
-        <h3>DLP can't read prompts</h3>
-        <p>Network-level DLP can block api.anthropic.com entirely, but it can't parse a JSON request body to find the AWS key buried in message 47 of a conversation.</p>
-      </div>
-      <div class="problem fade-in">
-        <h3>Git scanning is too late</h3>
-        <p>GitGuardian catches secrets after commit. But when you paste a key into Claude, it's already on Anthropic's servers. There's no git push to intercept.</p>
-      </div>
-    </div>
+    <div class="split-demo fade-in" id="hero-demo"></div>
   </div>
 </section>
 
 <section id="how-it-works">
   <div class="container">
-    <div class="section-num fade-in">02 &mdash; Setup</div>
-    <h2 class="section-title fade-in">Two lines. That's it.</h2>
+    <h2 class="section-title fade-in">Setup</h2>
     <div class="tabs fade-in">
-      <button class="tab-btn active" data-tab="hook">Claude Code hook</button>
-      <button class="tab-btn" data-tab="proxy">Proxy mode</button>
+      <button class="tab-btn active" data-tab="all">One command</button>
+      <button class="tab-btn" data-tab="hook">Hooks only</button>
+      <button class="tab-btn" data-tab="proxy">Proxy only</button>
     </div>
-    <div class="tab-content active" id="tab-hook">
+    <div class="tab-content active" id="tab-all">
+      <div class="terminal fade-in" style="max-width:580px" id="all-terminal"></div>
+      <p class="tab-note fade-in">Sets up proxy, file scanning hook, and MCP server. Restart your terminal for env vars.</p>
+    </div>
+    <div class="tab-content" id="tab-hook">
       <div class="terminal fade-in" style="max-width:580px" id="hook-terminal"></div>
-      <p class="tab-note fade-in">Prompts with secrets are blocked. Tool inputs (Bash, Write, Edit) are redacted automatically &mdash; real credentials saved to .env, placeholders sent to Claude. No proxy, no certificates.</p>
+      <p class="tab-note fade-in">No proxy. Scans prompts, tool inputs, and written files.</p>
     </div>
     <div class="tab-content" id="tab-proxy">
       <div class="terminal fade-in" style="max-width:580px" id="proxy-terminal"></div>
-      <p class="tab-note fade-in">Works with any AI tool &mdash; Cursor, Copilot, direct API calls. Transparent interception via mitmproxy.</p>
+      <p class="tab-note fade-in">For any AI tool. Set HTTPS_PROXY=http://127.0.0.1:8080</p>
     </div>
   </div>
 </section>
 
 <section id="catches">
   <div class="container">
-    <div class="section-num fade-in">03 &mdash; Detection</div>
-    <h2 class="section-title fade-in">8 rules. Zero false positives.</h2>
+    <h2 class="section-title fade-in">What it catches</h2>
+    <p class="tab-note fade-in" style="margin-bottom:28px;margin-top:-20px">Secrets going into AI (prompts, tool inputs) and coming out of AI (generated code, written files).</p>
     <table class="detect-table fade-in" id="detect-table">
       <thead><tr><th>Rule</th><th>Description</th><th>Pattern</th></tr></thead>
       <tbody></tbody>
     </table>
+    <div style="margin-top:40px">
+      <div class="terminal fade-in" style="max-width:420px" id="scandir-terminal"></div>
+      <p class="tab-note fade-in">Scan an existing codebase. --fix replaces secrets with env var references and saves to .env.</p>
+    </div>
+  </div>
+</section>
+
+<section id="layers">
+  <div class="container">
+    <h2 class="section-title fade-in">Three layers</h2>
+    <div class="modes-grid">
+      <div class="mode fade-in">
+        <div class="mode-label">Proxy</div>
+        <p>Network-level. Redacts secrets in API requests. Can't be bypassed.</p>
+      </div>
+      <div class="mode fade-in">
+        <div class="mode-label">Hooks</div>
+        <p>Claude Code. Scans files after Write/Edit. Alerts the agent to fix.</p>
+      </div>
+      <div class="mode fade-in">
+        <div class="mode-label">MCP Server</div>
+        <p>Any agent. Three tools: scan code, store secrets, scan files.</p>
+      </div>
+    </div>
+    <p class="tab-note fade-in" style="margin-top:20px">All three share the same detection engine. setup-all installs all of them.</p>
   </div>
 </section>
 
 <section id="modes">
   <div class="container">
-    <div class="section-num fade-in">04 &mdash; Enforcement</div>
-    <h2 class="section-title fade-in">Four modes. Your call.</h2>
+    <h2 class="section-title fade-in">Modes</h2>
     <div class="modes-grid modes-4">
       <div class="mode fade-in">
         <div class="mode-label">Redact</div>
-        <h3>Replace &amp; rewrite</h3>
-        <p>Replaces secrets with env var placeholders, saves real credentials to .env, and injects a system instruction. The AI writes secure code using environment variables automatically.</p>
+        <p>Replaces secrets with env var placeholders. Saves credentials to .env.</p>
       </div>
       <div class="mode fade-in">
         <div class="mode-label">Block</div>
-        <h3>Reject &amp; explain</h3>
-        <p>Returns a clear error. The developer removes the secret and retries. Ten seconds of friction that prevents a breach.</p>
+        <p>Rejects the request. Developer fixes and retries.</p>
       </div>
       <div class="mode fade-in">
         <div class="mode-label">Warn</div>
-        <h3>Forward &amp; log</h3>
-        <p>Sends the request but logs a warning. Use this when rolling out aigate to understand exposure before enforcing.</p>
+        <p>Forwards but logs a warning.</p>
       </div>
       <div class="mode fade-in">
         <div class="mode-label">Audit</div>
-        <h3>Silent observe</h3>
-        <p>No blocking, no warnings. Writes every detection to a JSON audit log. Perfect for proving compliance to auditors.</p>
+        <p>Silent JSON logging for compliance.</p>
       </div>
     </div>
-  </div>
-</section>
-
-<section id="redact">
-  <div class="container">
-    <div class="section-num fade-in">05 &mdash; Redact mode</div>
-    <h2 class="section-title fade-in">Secrets in, env vars out.</h2>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start" class="redact-layout">
-      <div class="fade-in">
-        <p style="color:var(--ink-mid);font-size:0.9rem;line-height:1.65;margin-bottom:20px">Redact mode rewrites requests before they reach the AI. Secrets are replaced with named placeholders. Real credentials are saved to a local .env file. A system instruction tells the AI to use environment variables. The AI never sees the real values.</p>
-        <p style="color:var(--ink-mid);font-size:0.9rem;line-height:1.65">Token prefixes are mapped to conventional env var names automatically:</p>
-      </div>
+    <div style="margin-top:40px">
       <table class="redact-table fade-in" id="redact-map"></table>
     </div>
   </div>
@@ -566,26 +522,24 @@ footer {
 
 <section id="technical">
   <div class="container">
-    <div class="section-num fade-in">06 &mdash; Technical details</div>
-    <h2 class="section-title fade-in">Under the hood</h2>
+    <h2 class="section-title fade-in">Technical</h2>
     <div class="specs fade-in">
-      <div class="spec"><div class="spec-key">Codebase</div><div class="spec-val">~900 lines of Python. Read the whole thing in 20 minutes.</div></div>
-      <div class="spec"><div class="spec-key">Performance</div><div class="spec-val">Typical prompts scan in 0.005ms. Even 1MB of text scans in 67ms.</div></div>
-      <div class="spec"><div class="spec-key">Detection</div><div class="spec-val">Regex + Shannon entropy. Deterministic, auditable, no model downloads.</div></div>
-      <div class="spec"><div class="spec-key">Allowlist</div><div class="spec-val">Suppress known false positives with fnmatch wildcard patterns.</div></div>
-      <div class="spec"><div class="spec-key">Audit log</div><div class="spec-val">JSON. ISO 8601 timestamp, provider, rule, redacted match, action.</div></div>
-      <div class="spec"><div class="spec-key">Telemetry</div><div class="spec-val">None. Nothing leaves your machine. No accounts, no analytics.</div></div>
+      <div class="spec"><div class="spec-key">Codebase</div><div class="spec-val">~900 lines of Python.</div></div>
+      <div class="spec"><div class="spec-key">Speed</div><div class="spec-val">0.005ms per prompt. 67ms for 1MB.</div></div>
+      <div class="spec"><div class="spec-key">Detection</div><div class="spec-val">Regex + Shannon entropy. No ML.</div></div>
+      <div class="spec"><div class="spec-key">Telemetry</div><div class="spec-val">None. Fully local.</div></div>
     </div>
   </div>
 </section>
 
 <section id="install" class="install-section">
   <div class="container">
-    <div class="section-num fade-in">07 &mdash; Install</div>
-    <h2 class="section-title fade-in">30 seconds.</h2>
+    <h2 class="section-title fade-in">Install</h2>
     <div class="terminal fade-in" style="max-width:500px" id="install-terminal"></div>
-    <div class="install-note fade-in">macOS and Linux &middot; Python 3.11+ &middot; jq (for hooks)</div>
-    <div class="install-ctas fade-in">
+    <div class="install-note fade-in">macOS and Linux &middot; Python 3.11+</div>
+    <p class="tab-note fade-in" style="margin-bottom:12px">Or paste this into Claude Code:</p>
+    <div class="terminal fade-in" style="max-width:500px" id="claude-paste-terminal"></div>
+    <div style="margin-top:32px" class="install-ctas fade-in">
       <a href="https://github.com/jricramc/aigate" class="btn btn-primary">View on GitHub</a>
       <a href="https://pypi.org/project/aigate/" class="btn btn-secondary">PyPI</a>
       <a href="https://github.com/jricramc/aigate#readme" class="btn btn-secondary">Read the docs</a>
@@ -651,7 +605,7 @@ var fakeKey = 'sk-a' + 'nt-api03-VAYw0rAdAkjB44_zxidH5oyBecfwVun' + '23aTnCnzYLY
   var lb = document.createElement('div');
   lb.className = 'terminal-body';
   lb.innerHTML = [
-    '<span class="o">\u{1F6E1}\uFE0F aigate v0.2.1</span>',
+    '<span class="o">\u{1F6E1}\uFE0F aigate v0.3.0</span>',
     '<span class="m">&nbsp;&nbsp;Mode:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;redact</span>',
     '<span class="m">&nbsp;&nbsp;Proxy:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;http://127.0.0.1:8080</span>',
     '<span class="m">&nbsp;&nbsp;Providers: api.anthropic.com, api.openai.com</span>',
@@ -702,37 +656,49 @@ var fakeKey = 'sk-a' + 'nt-api03-VAYw0rAdAkjB44_zxidH5oyBecfwVun' + '23aTnCnzYLY
   demo.appendChild(right);
 })();
 
+// "One command" tab
+buildTerminal('all-terminal', [
+  '<span class="p">$</span> <span class="c">pip install aigate && aigate setup-all</span><br><br>',
+  '<span class="o">&nbsp;&nbsp;Setting up aigate...</span><br><br>',
+  '<span class="m">&nbsp;&nbsp;[1/5] CA certificate</span><br>',
+  '<span class="m">&nbsp;&nbsp;[2/5] Shell environment</span><br>',
+  '<span class="m">&nbsp;&nbsp;[3/5] Proxy (redact mode)</span><br>',
+  '<span class="m">&nbsp;&nbsp;[4/5] PostToolUse hook</span><br>',
+  '<span class="m">&nbsp;&nbsp;[5/5] MCP server</span><br><br>',
+  '<span class="o">&nbsp;&nbsp;aigate v0.3.0 is active.</span>'
+]);
+
+// "Hooks only" tab
 buildTerminal('hook-terminal', [
-  '<span class="p">$</span> <span class="c">pip install aigate</span><br>',
-  '<span class="p">$</span> <span class="c">aigate install-hook</span><br><br>',
-  '<span class="o">&nbsp;&nbsp;\u{1F6E1}\uFE0F aigate Claude Code integration installed:</span><br><br>',
-  '<span class="m">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Installed ~/.claude/hooks/aigate-scan-prompt.sh</span><br>',
-  '<span class="m">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Installed ~/.claude/hooks/aigate-scan-tool.sh</span><br>',
-  '<span class="m">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Added UserPromptSubmit hook to settings.json</span><br>',
-  '<span class="m">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Added PreToolUse hook to settings.json</span><br><br>',
-  '<span class="o">&nbsp;&nbsp;Done. aigate will now scan all prompts and tool inputs.</span>'
+  '<span class="p">$</span> <span class="c">pip install aigate && aigate install-hook</span>'
 ]);
 
+// "Proxy only" tab
 buildTerminal('proxy-terminal', [
-  '<span class="p">$</span> <span class="c">pip install aigate</span><br>',
-  '<span class="p">$</span> <span class="c">aigate setup</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="m"># one-time: installs CA cert</span><br>',
-  '<span class="p">$</span> <span class="c">aigate start --mode redact</span><br><br>',
-  '<span class="o">&nbsp;&nbsp;\u{1F6E1}\uFE0F aigate v0.2.1</span><br>',
-  '<span class="m">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Mode:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;redact</span><br>',
-  '<span class="m">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Proxy:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;http://127.0.0.1:8080</span><br>',
-  '<span class="m">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Providers: api.anthropic.com, api.openai.com, api.mistral.ai</span><br><br>',
-  '<span class="m">&nbsp;&nbsp;Configure your AI tool:</span><br>',
-  '<span class="c">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;export HTTPS_PROXY=http://127.0.0.1:8080</span>'
+  '<span class="p">$</span> <span class="c">aigate setup && aigate start --mode redact</span>'
 ]);
 
+// scan-dir
+buildTerminal('scandir-terminal', [
+  '<span class="p">$</span> <span class="c">aigate scan-dir .</span><br>',
+  '<span class="p">$</span> <span class="c">aigate scan-dir . --fix --dry-run</span><br>',
+  '<span class="p">$</span> <span class="c">aigate scan-dir . --fix</span>'
+]);
+
+// Install terminal
 buildTerminal('install-terminal', [
-  '<span class="c">pip install aigate</span><br>',
-  '<span class="c">aigate install-hook</span> &nbsp;&nbsp;&nbsp;<span class="m"># Claude Code (recommended)</span><br>',
-  '<span class="m"># or</span><br>',
-  '<span class="c">aigate start</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="m"># Proxy mode for any AI tool</span>'
+  '<span class="c">pip install aigate && aigate setup-all</span>'
 ], {
   copy: true,
-  copyText: 'pip install aigate\naigate install-hook    # Claude Code (recommended)\n# or\naigate start           # Proxy mode for any AI tool'
+  copyText: 'pip install aigate && aigate setup-all'
+});
+
+// "Paste into Claude Code" terminal
+buildTerminal('claude-paste-terminal', [
+  '<span class="c">Run: pip install aigate && aigate setup-all</span>'
+], {
+  copy: true,
+  copyText: 'Run: pip install aigate && aigate setup-all'
 });
 
 // Detection table
